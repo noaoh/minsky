@@ -1,0 +1,53 @@
+{
+  "name": "minsky",
+  "version": "1.0.0",
+  "description": "A minksy machine simulator library",
+  "main": "dist/minsky.cjs.js",
+  "author": "Noah Holt <noahryanholt@gmail.com>",
+  "license": "ISC",
+  "browser": "dist/minsky.umd.js",
+  "module": "dist/minsky.esm.js",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "pretest": "npm run build",
+    "node-test": "tape tests/node-tests.js",
+    "web-test": " browserify tests/node-tests.js | testling --html",
+    "test": "npm run node-test && npm run web-test"
+  },
+  "testling": {
+    "files": "tests/node-tests.js",
+    "browsers": [
+      "chrome/42..latest",
+      "firefox/45..latest",
+      "safari/9..latest",
+      "opera/next"
+    ]
+  },
+  "devDependencies": {
+    "browserify": "^16.2.3",
+    "rollup": "^0.67.0",
+    "rollup-plugin-commonjs": "^9.1.0",
+    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-plugin-terser": "2.0.2",
+    "tape": "^4.9.1",
+    "testling": "^1.7.1"
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/noaoh/minsky.git"
+  },
+  "keywords": [
+    "base64",
+    "encode",
+    "string"
+  ],
+  "bugs": {
+    "url": "https://github.com/noaoh/minsky/issues"
+  },
+  "homepage": "https://github.com/noaoh/minsky#readme",
+  "dependencies": {}
+}
