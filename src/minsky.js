@@ -5,15 +5,16 @@ export class RegisterMachine {
         constructor(nodes) {
                 this.nodes = nodes || {};
                 this.registers = {};
+                this.links = [];
                 this.initNodes();
         }
 
         initNodes() {
                 // each node's transition can be assigned a label, and in this loop
                 // that label is converted into a node
-                for (let n in this.nodes) {
-                        // Getting the node from the key
-                        let node = this.nodes[n];
+                for (let label in this.nodes) {
+                        // Getting the node from the label
+                        let node = this.nodes[label];
                         // Each node's environment is the shared set of
                         // registers
                         node.registers = this.registers;
@@ -21,9 +22,9 @@ export class RegisterMachine {
                         if (node instanceof PlusNode) {
                                 if (node.on_increment !== halt_node) {
                                         this.checkNode(node.on_increment);
+                                        node.on_increment = this.nodes[node.on_increment];
                                 }
-                                node.on_increment = this.nodes[node.on_increment];
-                        } 
+                        }
                         // There are two possible transitions for a MinusNode
                         // either one may be a halt node or a distinct node
                         else if (node instanceof MinusNode) {
@@ -42,7 +43,13 @@ export class RegisterMachine {
                                 throw new Error(`invalid node type: ${node.constructor.name}`);
                         }
                 }
+
                 this.start = this.nodes["start"];
+        }
+
+        setStart(node) {
+                this.checkNode(node);
+                this.start = this.nodes[node];
         }
 
         // Check that the node referenced as a transition node exists

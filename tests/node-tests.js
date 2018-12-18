@@ -10,7 +10,7 @@ test("\ninvalid node type", function (t) {
         return new minsky.RegisterMachine({"start": new minsky.RegisterMachine({})});
     };
 
-    t.throws(throw_func, err_func("RegisterMachine"))
+    t.throws(throw_func, err_func("RegisterMachine"));
 
     t.end();
 });
@@ -22,7 +22,7 @@ test("\nno node named", function (t) {
 
     const throw_func = function() {
         return new minsky.RegisterMachine({"start": new minsky.PlusNode({on_increment: "b"})});
-    }
+    };
 
     t.throws(throw_func, err_func("b"));
 
@@ -40,11 +40,11 @@ test("\nval must be greater than", function (t) {
 
     const throw_plus_func = function() {
         return new minsky.PlusNode({"val": -1})
-    }
+    };
 
     const throw_minus_func = function() {
             return new minsky.MinusNode({"val": -1})
-    }
+    };
 
     t.throws(throw_plus_func, plus_func(-1));
 
