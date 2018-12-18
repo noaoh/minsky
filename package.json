@@ -49,5 +49,7 @@
     "url": "https://github.com/noaoh/minsky/issues"
   },
   "homepage": "https://github.com/noaoh/minsky#readme",
-  "dependencies": {}
+  "dependencies": {
+    "immutable": "^4.0.0-rc.12"
+  }
 }

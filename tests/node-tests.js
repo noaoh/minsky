@@ -1,4 +1,4 @@
-const minsky = require('../dist/minsky.cjs.js');
+const { RegisterMachine, PlusNode, MinusNode, linkType} = require('../dist/minsky.cjs.js');
 const test = require('tape');
 
 test("\ninvalid node type", function (t) {
@@ -7,7 +7,8 @@ test("\ninvalid node type", function (t) {
     };
 
     const throw_func = function() {
-        return new minsky.RegisterMachine({"start": new minsky.RegisterMachine({})});
+        return new RegisterMachine()
+            .addNode("start", new RegisterMachine());
     };
 
     t.throws(throw_func, err_func("RegisterMachine"));
@@ -21,7 +22,9 @@ test("\nno node named", function (t) {
     };
 
     const throw_func = function() {
-        return new minsky.RegisterMachine({"start": new minsky.PlusNode({on_increment: "b"})});
+        return new RegisterMachine()
+            .addNode("start", new PlusNode())
+            .addLink(linkType.INC, "start", "b");
     };
 
     t.throws(throw_func, err_func("b"));
@@ -31,19 +34,19 @@ test("\nno node named", function (t) {
 
 test("\nval must be greater than", function (t) {
     const plus_func = function (node) {
-        return `val in PlusNode must be greater than or equal to ${node}`
+        return "val in PlusNode must be greater than or equal to 0";
     };
 
     const minus_func = function (node) {
-        return `val in MinusNode must be greater than or equal to ${node}`
+        return "val in MinusNode must be greater than or equal to 0";
     };
 
     const throw_plus_func = function() {
-        return new minsky.PlusNode({"val": -1})
+        return new PlusNode({"val": -1})
     };
 
     const throw_minus_func = function() {
-            return new minsky.MinusNode({"val": -1})
+            return new MinusNode({"val": -1})
     };
 
     t.throws(throw_plus_func, plus_func(-1));
@@ -57,13 +60,10 @@ test('\nincrement', function (t) {
     const inputs = [0, 1, 2];
     const outputs = [1, 2, 3];
     const increment = function (x) {
-        let increment_machine = new minsky.RegisterMachine(
-            {
-                "start": new minsky.PlusNode({register: "A", val: x})
-            }
-        );
-        increment_machine.run();
-        return increment_machine.registers["A"];
+        let increment_machine = new RegisterMachine()
+            .addNode("start", new PlusNode({register: "A", val: x}))
+            .setStart("start");
+        return increment_machine.run().get("A");
     };
 
     for (const i in inputs) {
@@ -81,13 +81,10 @@ test('\ndecrement', function (t) {
     const inputs = [1, 2, 3];
     const outputs = [0, 1, 2];
     const decrement = function (x) {
-        let decrement_machine = new minsky.RegisterMachine(
-            {
-                "start": new minsky.MinusNode({register: "A", val: x})
-            }
-        );
-        decrement_machine.run();
-        return decrement_machine.registers["A"];
+        let decrement_machine = new RegisterMachine()
+            .addNode("start", new MinusNode({register: "A", val: x}))
+            .setStart("start");
+        return decrement_machine.run().get("A");
     };
 
     for (const i in inputs) {
@@ -104,15 +101,15 @@ test('\nnot zero', function (t) {
     const inputs = [0, 1, 2];
     const outputs = [0, 1, 1];
     const not_zero = function (x) {
-        let not_zero_machine = new minsky.RegisterMachine(
-            {
-                "start": new minsky.MinusNode({register: "A", val: x, on_decrement: "A1"}),
-                "A1": new minsky.MinusNode({register: "A", on_decrement: "A1", on_empty: "A2"}),
-                "A2": new minsky.PlusNode({register: "A"})
-            }
-        );
-        not_zero_machine.run();
-        return not_zero_machine.registers["A"];
+        let not_zero_machine = new RegisterMachine()
+            .addNode("start", new MinusNode({register: "A", val: x}))
+            .addNode("A1", new MinusNode({register: "A"}))
+            .addNode("A2", new PlusNode({register: "A"}))
+            .addLink(linkType.DEC, "start", "A1")
+            .addLink(linkType.DEC, "A1", "A1")
+            .addLink(linkType.EMP, "A1", "A2")
+            .setStart("start");
+        return not_zero_machine.run().get("A");
     };
 
     for (const i in inputs) {
@@ -130,15 +127,15 @@ test('\nis zero', function (t) {
     const inputs = [0, 1, 2];
     const outputs = [1, 0, 0];
     const is_zero = function (x) {
-        const is_zero_machine = new minsky.RegisterMachine(
-            {
-                "start": new minsky.MinusNode({register: "A", val: x, on_empty: "A1", on_decrement: "A2"}),
-                "A1": new minsky.PlusNode({register: "A"}),
-                "A2": new minsky.MinusNode({register: "A", on_decrement: "A2"})
-            }
-        );
-        is_zero_machine.run();
-        return is_zero_machine.registers["A"];
+        const is_zero_machine = new RegisterMachine()
+            .addNode("start", new MinusNode({register: "A", val: x}))
+            .addNode("A1", new PlusNode({register: "A"}))
+            .addNode("A2", new MinusNode({register: "A"}))
+            .addLink(linkType.EMP, "start", "A1")
+            .addLink(linkType.DEC, "start", "A2")
+            .addLink(linkType.DEC, "A2", "A2")
+            .setStart("start");
+        return is_zero_machine.run()["A"];
     };
 
     for (const i in inputs) {
@@ -156,26 +153,39 @@ test('\ndouble adder', function (t) {
     const inputs = [{"x": 10, "y": 100}, {"x": 100, "y": 100}, {"x": 100, "y": 10}];
     const outputs = [[10, 100, 110], [100, 100, 200], [100, 10, 110]];
     const double_adder = function (x, y) {
-        let double_adder_machine = new minsky.RegisterMachine(
-            {
-                "startA": new minsky.MinusNode({register: "A", val: x, on_decrement: "CAddA", on_empty: "DRestoreA"}), // initial A
-                "CAddA": new minsky.PlusNode({register: "C", val: 0, on_increment: "DAddA"}),
-                "DAddA": new minsky.PlusNode({register: "D", val: 0, on_increment: "startA"}),
-                "DRestoreA": new minsky.MinusNode({register: "D", on_decrement: "RestoredA", on_empty: "startB"}),
-                "RestoredA": new minsky.PlusNode({register: "A", on_increment: "DRestoreA"}),
-                "startB": new minsky.MinusNode({register: "B", val: y, on_decrement: "CAddB", on_empty: "DRestoreB"}), // initial B
-                "CAddB": new minsky.PlusNode({register: "C", on_increment: "DAddB"}),
-                "DAddB": new minsky.PlusNode({register: "D", on_increment: "startB"}),
-                "DRestoreB": new minsky.MinusNode({register: "D", on_decrement: "RestoredB"}),
-                "RestoredB": new minsky.PlusNode({register: "B", on_increment: "DRestoreB"})
-            }
-        );
+        const double_adder_machine = new RegisterMachine()
+            .addNode("startA", new MinusNode({register: "A", val: x}))
+            .addNode("CAddA", new PlusNode({register: "C", val: 0}))
+            .addNode("DAddA", new PlusNode({register: "D", val: 0}))
+            .addNode("DRestoreA", new PlusNode({register: "D"}))
+            .addNode("RestoredA", new PlusNode({register: "A"}))
+            .addNode("startB", new PlusNode({register: "B", val: y}))
+            .addNode("CAddB", new PlusNode({register: "C"}))
+            .addNode("DAddB", new PlusNode({register: "D"}))
+            .addNode("DRestoreB", new MinusNode({register: "D"}))
+            .addNode("RestoredB", new PlusNode({register: "B"}))
+            .addLink(linkType.DEC, "startA", "CAddA")
+            .addLink(linkType.EMP, "startA", "DRestoreA")
+            .addLink(linkType.INC, "CAddA", "DAddA")
+            .addLink(linkType.INC, "DAddA", "startA")
+            .addLink(linkType.DEC, "DRestoreA", "RestoredA")
+            .addLink(linkType.EMP, "DRestoreA", "startB")
+            .addLink(linkType.INC, "RestoredA", "DRestoreA")
+            .addLink(linkType.DEC, "startB", "CAddB")
+            .addLink(linkType.EMP, "startB", "DRestoreB")
+            .addLink(linkType.INC, "CAddB", 'DAddB')
+            .addLink(linkType.INC, "DAddB", "startB")
+            .addLink(linkType.DEC, "DRestoreB", "RestoredB")
+            .addLink(linkType.INC, "RestoredB", "DRestoreB")
+            .setStart("startA");
+
+        double_adder_machine.run();
 
         double_adder_machine.start = double_adder_machine.nodes["startA"];
-        double_adder_machine.run();
-        const A = double_adder_machine.registers["A"];
-        const B = double_adder_machine.registers["B"];
-        const C = double_adder_machine.registers["C"];
+        const regs = double_adder_machine.run();
+        const A = regs.get("A");
+        const B = regs.get("B");
+        const C = regs.get("C");
         return [A, B, C];
     };
 
