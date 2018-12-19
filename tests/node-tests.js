@@ -151,16 +151,16 @@ test('\nis zero', function (t) {
 });
 
 test('\ndouble adder', function (t) {
-    const inputs = [{"x": 10, "y": 100}, {"x": 100, "y": 100}, {"x": 100, "y": 10}];
-    const outputs = [[10, 100, 110], [100, 100, 200], [100, 10, 110]];
+    const inputs = [{"x": 2, "y": 2}, {"x": 10, "y": 100}, {"x": 100, "y": 100}, {"x": 100, "y": 10}];
+    const outputs = [[2, 2, 4], [10, 100, 110], [100, 100, 200], [100, 10, 110]];
     const double_adder = function (x, y) {
         const double_adder_machine = new RegisterMachine()
             .addNode("startA", new MinusNode({register: "A", value: x}))
             .addNode("CAddA", new PlusNode({register: "C", value: 0}))
             .addNode("DAddA", new PlusNode({register: "D", value: 0}))
-            .addNode("DRestoreA", new PlusNode({register: "D"}))
+            .addNode("DRestoreA", new MinusNode({register: "D"}))
             .addNode("RestoredA", new PlusNode({register: "A"}))
-            .addNode("startB", new PlusNode({register: "B", value: y}))
+            .addNode("startB", new MinusNode({register: "B", value: y}))
             .addNode("CAddB", new PlusNode({register: "C"}))
             .addNode("DAddB", new PlusNode({register: "D"}))
             .addNode("DRestoreB", new MinusNode({register: "D"}))
