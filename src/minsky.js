@@ -107,20 +107,22 @@ export class RegisterMachine extends Record({
         const middleState = oldState.withMutations(function (rm) {
             rm.updateNode(label);
         });
-        const nodeVal = middleState.getIn(["nodes", label]);
+
+        const nodeVal = middleState.getIn(["nodes", label, "value"]);
+        const nodeReg = middleState.getIn(["nodes", label, "register"]);
 
         if (nodeVal === empty) {
             return middleState.withMutations(function (rm) {
-                const nextNode = rm.getIn(["nodes", label, linkType.EMP]);
+                rm.setIn(["registers", nodeReg], nodeVal);
+                const nextNode = rm.getIn(["links", label, linkType.EMP]);
                 rm.set("currNode", nextNode);
             });
         } else {
             return middleState.withMutations(function (rm) {
                 rm.updateIn(["nodes", label, "value"], x => x - 1);
-                const nodeReg = rm.getIn(["nodes", label, "register"]);
-                const newVal = rm.getIn(["nodes", label, "value"]);
-                rm.setIn(["registers", nodeReg], newVal);
-                const nextNode = rm.getIn(["nodes", label, linkType.DEC]);
+                const newNodeVal = rm.getIn(["nodes", label, "value"]);
+                rm.setIn(["registers", nodeReg], newNodeVal);
+                const nextNode = rm.getIn(["links", label, linkType.DEC]);
                 rm.set("currNode", nextNode);
             });
         }

@@ -136,7 +136,7 @@ test('\nis zero', function (t) {
             .addLink(linkType.DEC, "start", "A2")
             .addLink(linkType.DEC, "A2", "A2")
             .setStart("start");
-        return is_zero_machine.run()["A"];
+        return is_zero_machine.run().get("A");
     };
 
     for (const i in inputs) {
@@ -180,9 +180,6 @@ test('\ndouble adder', function (t) {
             .addLink(linkType.INC, "RestoredB", "DRestoreB")
             .setStart("startA");
 
-        double_adder_machine.run();
-
-        double_adder_machine.start = double_adder_machine.nodes["startA"];
         const regs = double_adder_machine.run();
         const A = regs.get("A");
         const B = regs.get("B");
