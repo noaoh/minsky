@@ -15,18 +15,20 @@ export class RegisterMachine extends Record({
 
     addNode(label, node) {
         if (node instanceof PlusNode) {
-            return this.withMutations(function (rm) {
+            const x = this.withMutations(function(rm) {
                 rm.setIn(['nodes', label], node);
                 rm.setIn(['links', label, linkType.INC], haltNode);
                 rm.setIn(['registers', node.get("register")], null);
-            })
+            });
+            return x;
         } else if (node instanceof MinusNode) {
-            return this.withMutations(function (rm) {
+            const x = this.withMutations(function(rm) {
                 rm.setIn(['nodes', label], node);
                 rm.setIn(['links', label, linkType.EMP], haltNode);
                 rm.setIn(['links', label, linkType.DEC], haltNode);
                 rm.setIn(['registers', node.get("register")], null);
-            })
+            });
+            return x;
         } else {
             throw new Error(`invalid node type: ${node.constructor.name}`);
         }
@@ -46,7 +48,8 @@ export class RegisterMachine extends Record({
         }
         this.checkNode(from);
         this.checkNode(to);
-        return this.setIn(['links', from, type], to);
+        const x = this.setIn(['links', from, type], to);
+        return x;
     }
 
     checkNode(label) {
@@ -63,9 +66,9 @@ export class RegisterMachine extends Record({
 
     updateNode(label) {
         const nodeReg = this.getIn(["nodes", label, "register"]);
-        if (this.getIn(["nodes", label, "val"]) === undefined) {
+        if (this.getIn(["nodes", label, "value"]) === null) {
             const regVal = this.getIn(["registers", nodeReg]);
-            this.setIn(["nodes", label, "val"], regVal);
+            return this.setIn(["nodes", label, "value"], regVal);
         } else {
             return this;
         }
@@ -82,8 +85,8 @@ export class RegisterMachine extends Record({
         const newState = oldState.withMutations(function (rm) {
             // need to break this down a bit
             rm.updateNode(label);
-            rm.updateIn(["nodes", label, "val"], x => x + 1);
-            const newVal = rm.getIn(["nodes", label, "val"]);
+            rm.updateIn(["nodes", label, "value"], x => x + 1);
+            const newVal = rm.getIn(["nodes", label, "value"]);
             const nodeReg = rm.getIn(["nodes", label, "register"]);
             rm.setIn(['registers', nodeReg], newVal);
             const nextNode = rm.getIn(["links", label, linkType.INC]);
@@ -113,9 +116,9 @@ export class RegisterMachine extends Record({
             });
         } else {
             return middleState.withMutations(function (rm) {
-                rm.updateIn(["nodes", label, "val"], x => x - 1);
+                rm.updateIn(["nodes", label, "value"], x => x - 1);
                 const nodeReg = rm.getIn(["nodes", label, "register"]);
-                const newVal = rm.getIn(["nodes", label, "val"]);
+                const newVal = rm.getIn(["nodes", label, "value"]);
                 rm.setIn(["registers", nodeReg], newVal);
                 const nextNode = rm.getIn(["nodes", label, linkType.DEC]);
                 rm.set("currNode", nextNode);
@@ -160,21 +163,21 @@ export class RegisterMachine extends Record({
     }
 }
 
-export class PlusNode extends Record({val: null, register: null}) {
-    constructor(val, register) {
-        if (val < empty) {
-            throw new Error("val in MinusNode must be greater than or equal to 0");
+export class PlusNode extends Record({value: null, register: null}) {
+    constructor({value, register} = {}) {
+        if (value < empty) {
+            throw new Error("value in PlusNode must be greater than or equal to 0");
         }
-        super({val: val, register: register});
+        super({value: value, register: register});
     }
 }
 
-export class MinusNode extends Record({val: null, register: null}) {
-    constructor(val, register) {
-        if (val < empty) {
-            throw new Error("val in MinusNode must be greater than or equal to 0");
+export class MinusNode extends Record({value: null, register: null}) {
+    constructor({value, register} = {}) {
+        if (value < empty) {
+            throw new Error("value in MinusNode must be greater than or equal to 0");
         }
-        super({val: val, register: register});
+        super({value: value, register: register});
     }
 }
 

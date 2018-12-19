@@ -32,21 +32,21 @@ test("\nno node named", function (t) {
     t.end();
 });
 
-test("\nval must be greater than", function (t) {
+test("\nvalue must be greater than", function (t) {
     const plus_func = function (node) {
-        return "val in PlusNode must be greater than or equal to 0";
+        return "value in PlusNode must be greater than or equal to 0";
     };
 
     const minus_func = function (node) {
-        return "val in MinusNode must be greater than or equal to 0";
+        return "value in MinusNode must be greater than or equal to 0";
     };
 
     const throw_plus_func = function() {
-        return new PlusNode({"val": -1})
+        return new PlusNode({"value": -1})
     };
 
     const throw_minus_func = function() {
-            return new MinusNode({"val": -1})
+            return new MinusNode({"value": -1})
     };
 
     t.throws(throw_plus_func, plus_func(-1));
@@ -61,9 +61,10 @@ test('\nincrement', function (t) {
     const outputs = [1, 2, 3];
     const increment = function (x) {
         let increment_machine = new RegisterMachine()
-            .addNode("start", new PlusNode({register: "A", val: x}))
+            .addNode("start", new PlusNode({register: "A", value: x}))
             .setStart("start");
-        return increment_machine.run().get("A");
+        const regs = increment_machine.run();
+        return regs.get("A");
     };
 
     for (const i in inputs) {
@@ -82,7 +83,7 @@ test('\ndecrement', function (t) {
     const outputs = [0, 1, 2];
     const decrement = function (x) {
         let decrement_machine = new RegisterMachine()
-            .addNode("start", new MinusNode({register: "A", val: x}))
+            .addNode("start", new MinusNode({register: "A", value: x}))
             .setStart("start");
         return decrement_machine.run().get("A");
     };
@@ -102,7 +103,7 @@ test('\nnot zero', function (t) {
     const outputs = [0, 1, 1];
     const not_zero = function (x) {
         let not_zero_machine = new RegisterMachine()
-            .addNode("start", new MinusNode({register: "A", val: x}))
+            .addNode("start", new MinusNode({register: "A", value: x}))
             .addNode("A1", new MinusNode({register: "A"}))
             .addNode("A2", new PlusNode({register: "A"}))
             .addLink(linkType.DEC, "start", "A1")
@@ -128,7 +129,7 @@ test('\nis zero', function (t) {
     const outputs = [1, 0, 0];
     const is_zero = function (x) {
         const is_zero_machine = new RegisterMachine()
-            .addNode("start", new MinusNode({register: "A", val: x}))
+            .addNode("start", new MinusNode({register: "A", value: x}))
             .addNode("A1", new PlusNode({register: "A"}))
             .addNode("A2", new MinusNode({register: "A"}))
             .addLink(linkType.EMP, "start", "A1")
@@ -154,12 +155,12 @@ test('\ndouble adder', function (t) {
     const outputs = [[10, 100, 110], [100, 100, 200], [100, 10, 110]];
     const double_adder = function (x, y) {
         const double_adder_machine = new RegisterMachine()
-            .addNode("startA", new MinusNode({register: "A", val: x}))
-            .addNode("CAddA", new PlusNode({register: "C", val: 0}))
-            .addNode("DAddA", new PlusNode({register: "D", val: 0}))
+            .addNode("startA", new MinusNode({register: "A", value: x}))
+            .addNode("CAddA", new PlusNode({register: "C", value: 0}))
+            .addNode("DAddA", new PlusNode({register: "D", value: 0}))
             .addNode("DRestoreA", new PlusNode({register: "D"}))
             .addNode("RestoredA", new PlusNode({register: "A"}))
-            .addNode("startB", new PlusNode({register: "B", val: y}))
+            .addNode("startB", new PlusNode({register: "B", value: y}))
             .addNode("CAddB", new PlusNode({register: "C"}))
             .addNode("DAddB", new PlusNode({register: "D"}))
             .addNode("DRestoreB", new MinusNode({register: "D"}))
