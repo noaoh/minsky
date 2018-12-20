@@ -16,6 +16,22 @@ test("\ninvalid node type", function (t) {
     t.end();
 });
 
+test("\ninvalid link type", function(t) {
+        const err_func = function(type) {
+                return `invalid link type: ${type}`;
+        };
+
+        const throw_func = function() {
+                return new RegisterMachine()
+                        .addNode("A", new PlusNode({"register": "A"}))
+                        .addNode("B", new MinusNode({"register": "B"}))
+                        .addLink("Full", "A", "B");
+        };
+
+        t.throws(throw_func, err_func("Full"));
+        t.end();
+});
+
 test("\nno node named", function (t) {
     const err_func = function (node) {
         return `register machine does not have node named: ${node}`

@@ -34,21 +34,20 @@ export class RegisterMachine extends Record({
     }
 
     addLink(type, from, to) {
-        let success = false;
-        for (let k in linkType) {
-            if (linkType[k] === type) {
-                success = true;
-                break;
-            }
-        }
-
-        if (!success) {
-            throw new Error(`invalid transition type: ${type.constructor.name}`);
-        }
-
+        this.checkLink(type);
         this.checkNode(from);
         this.checkNode(to);
         return this.setIn(['links', from, type], to);
+    }
+
+    checkLink(type) {
+            for (let k in linkType) {
+                    if (linkType[k] === type) {
+                            return;
+                    }
+            }
+
+            throw new Error(`invalid link type: ${type}`);
     }
 
     checkNode(label) {
