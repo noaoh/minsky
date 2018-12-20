@@ -213,3 +213,37 @@ test('\ndouble adder', function (t) {
     }
     t.end();
 });
+
+test("\nprevStep", function (t) {
+    const is_zero_machine = new RegisterMachine()
+        .addNode("start", new MinusNode({register: "A", value: 3}))
+        .addNode("A1", new PlusNode({register: "A"}))
+        .addNode("A2", new MinusNode({register: "A"}))
+        .addLink(linkType.EMP, "start", "A1")
+        .addLink(linkType.DEC, "start", "A2")
+        .addLink(linkType.DEC, "A2", "A2")
+        .setStart("start");
+
+    const input = is_zero_machine.nextStep().nextStep();
+    const output = is_zero_machine.nextStep();
+    // deepEquals doesn't work on the immutablejs data structures
+    // so they have to be converted to native JS data structures
+    t.deepEquals(input.prevStep().toJS(), output.toJS());
+    t.end();
+});
+
+test("\nsetTime", function (t) {
+    const is_zero_machine = new RegisterMachine()
+        .addNode("start", new MinusNode({register: "A", value: 4}))
+        .addNode("A1", new PlusNode({register: "A"}))
+        .addNode("A2", new MinusNode({register: "A"}))
+        .addLink(linkType.EMP, "start", "A1")
+        .addLink(linkType.DEC, "start", "A2")
+        .addLink(linkType.DEC, "A2", "A2")
+        .setStart("start");
+
+    const input = is_zero_machine.nextStep().nextStep().nextStep();
+    const output = is_zero_machine.nextStep();
+    t.deepEquals(input.setTime(1).toJS(), output.toJS());
+    t.end();
+});

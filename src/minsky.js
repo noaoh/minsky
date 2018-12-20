@@ -132,13 +132,13 @@ export class RegisterMachine extends Record({
     }
 
     setTime(t) {
-        const states = this.get("states").size(t + 1);
+        const states = this.get("states").setSize(t);
         const restoreState = this.getIn(["states", t]);
         return restoreState.set("states", states);
     }
 
     prevStep() {
-        const prevState = this.get("states").size - 2;
+        const prevState = this.get("states").size - 1;
         return this.setTime(prevState);
     }
 
