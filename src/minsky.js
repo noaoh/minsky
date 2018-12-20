@@ -15,20 +15,19 @@ export class RegisterMachine extends Record({
 
     addNode(label, node) {
         if (node instanceof PlusNode) {
-            const x = this.withMutations(function(rm) {
+            return this.withMutations(function(rm) {
                 rm.setIn(['nodes', label], node);
                 rm.setIn(['links', label, linkType.INC], haltNode);
                 rm.setIn(['registers', node.get("register")], null);
             });
-            return x;
         } else if (node instanceof MinusNode) {
-            const x = this.withMutations(function(rm) {
+            return this.withMutations(function(rm) {
                 rm.setIn(['nodes', label], node);
+                // Null values are set for links so currNode can be set to null later
                 rm.setIn(['links', label, linkType.EMP], haltNode);
                 rm.setIn(['links', label, linkType.DEC], haltNode);
                 rm.setIn(['registers', node.get("register")], null);
             });
-            return x;
         } else {
             throw new Error(`invalid node type: ${node.constructor.name}`);
         }
@@ -46,10 +45,10 @@ export class RegisterMachine extends Record({
         if (!success) {
             throw new Error(`invalid transition type: ${type.constructor.name}`);
         }
+
         this.checkNode(from);
         this.checkNode(to);
-        const x = this.setIn(['links', from, type], to);
-        return x;
+        return this.setIn(['links', from, type], to);
     }
 
     checkNode(label) {
@@ -74,6 +73,12 @@ export class RegisterMachine extends Record({
         }
     }
 
+    updateRegister(label) {
+        const newVal = this.getIn(["nodes", label, "value"]);
+        const nodeReg = this.getIn(["nodes", label, "register"]);
+        return this.setIn(["registers", nodeReg], newVal);
+    }
+
     increment(label) {
         this.checkNode(label);
         const realNode = this.getIn(["nodes", label]);
@@ -82,18 +87,14 @@ export class RegisterMachine extends Record({
         }
 
         const oldState = this.saveState();
-        const newState = oldState.withMutations(function (rm) {
-            // need to break this down a bit
+        return oldState.withMutations(function (rm) {
             rm.updateNode(label);
             rm.updateIn(["nodes", label, "value"], x => x + 1);
-            const newVal = rm.getIn(["nodes", label, "value"]);
-            const nodeReg = rm.getIn(["nodes", label, "register"]);
-            rm.setIn(['registers', nodeReg], newVal);
+            rm.updateRegister(label);
             const nextNode = rm.getIn(["links", label, linkType.INC]);
+            // can't use .setStart() if nextNode is null
             rm.set("currNode", nextNode);
         });
-
-        return newState;
     };
 
     decrement(label) {
@@ -109,19 +110,17 @@ export class RegisterMachine extends Record({
         });
 
         const nodeVal = middleState.getIn(["nodes", label, "value"]);
-        const nodeReg = middleState.getIn(["nodes", label, "register"]);
 
         if (nodeVal === empty) {
             return middleState.withMutations(function (rm) {
-                rm.setIn(["registers", nodeReg], nodeVal);
+                rm.updateRegister(label) ;
                 const nextNode = rm.getIn(["links", label, linkType.EMP]);
                 rm.set("currNode", nextNode);
             });
         } else {
             return middleState.withMutations(function (rm) {
                 rm.updateIn(["nodes", label, "value"], x => x - 1);
-                const newNodeVal = rm.getIn(["nodes", label, "value"]);
-                rm.setIn(["registers", nodeReg], newNodeVal);
+                rm.updateRegister(label);
                 const nextNode = rm.getIn(["links", label, linkType.DEC]);
                 rm.set("currNode", nextNode);
             });

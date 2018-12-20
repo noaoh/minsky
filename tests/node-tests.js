@@ -1,4 +1,4 @@
-const { RegisterMachine, PlusNode, MinusNode, linkType} = require('../dist/minsky.cjs.js');
+const {RegisterMachine, PlusNode, MinusNode, linkType} = require('../dist/minsky.cjs.js');
 const test = require('tape');
 
 test("\ninvalid node type", function (t) {
@@ -6,7 +6,7 @@ test("\ninvalid node type", function (t) {
         return `invalid node type: ${node}`
     };
 
-    const throw_func = function() {
+    const throw_func = function () {
         return new RegisterMachine()
             .addNode("start", new RegisterMachine());
     };
@@ -21,7 +21,7 @@ test("\nno node named", function (t) {
         return `register machine does not have node named: ${node}`
     };
 
-    const throw_func = function() {
+    const throw_func = function () {
         return new RegisterMachine()
             .addNode("start", new PlusNode())
             .addLink(linkType.INC, "start", "b");
@@ -41,12 +41,12 @@ test("\nvalue must be greater than", function (t) {
         return "value in MinusNode must be greater than or equal to 0";
     };
 
-    const throw_plus_func = function() {
+    const throw_plus_func = function () {
         return new PlusNode({"value": -1})
     };
 
-    const throw_minus_func = function() {
-            return new MinusNode({"value": -1})
+    const throw_minus_func = function () {
+        return new MinusNode({"value": -1})
     };
 
     t.throws(throw_plus_func, plus_func(-1));
